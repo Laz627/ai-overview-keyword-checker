@@ -18,7 +18,7 @@ async def save_auth_state():
         page = await context.new_page()
         await page.goto("https://accounts.google.com/signin")
         st.write("Please log in manually to your Google account...")
-        await page.wait_for_selector('a[aria-label*="Google Account: Brandon Smith"]', timeout=60000)
+        await page.wait_for_selector('a[aria-label*="Google Account:"]', timeout=60000)
         await context.storage_state(path="auth_state.json")
         await browser.close()
 
