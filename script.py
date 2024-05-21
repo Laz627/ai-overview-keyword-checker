@@ -5,18 +5,6 @@ from playwright.async_api import async_playwright
 from io import BytesIO
 import subprocess
 
-# Function to run setup.sh to install Playwright dependencies
-def install_playwright():
-    try:
-        result = subprocess.run(["bash", "setup.sh"], check=True, capture_output=True, text=True)
-        st.write("Playwright installation successful.")
-    except subprocess.CalledProcessError as e:
-        st.error(f"Error during Playwright installation: {e.stderr}")
-        st.stop()
-
-# Install Playwright if not already installed
-install_playwright()
-
 # Function to save authentication state
 async def save_auth_state():
     async with async_playwright() as p:
@@ -107,15 +95,6 @@ if uploaded_file is not None:
                 )
             except Exception as e:
                 st.error(f"Error processing keywords: {e}")
-
-# Requirements for the Streamlit app
-requirements = """
-streamlit
-pandas
-asyncio
-playwright
-openpyxl
-"""
 
 # Save the requirements to a file
 with open("requirements.txt", "w") as file:
