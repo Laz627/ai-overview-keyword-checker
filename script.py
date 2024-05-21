@@ -1,13 +1,19 @@
+import os
+import subprocess
 import streamlit as st
 import pandas as pd
 import asyncio
 from playwright.async_api import async_playwright
 from io import BytesIO
 
+# Ensure Playwright browsers are installed
+if not os.path.exists("/home/appuser/.cache/ms-playwright"):
+    subprocess.run(["playwright", "install"], check=True)
+
 # Function to save authentication state
 async def save_auth_state():
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)  # Use headless=True for compatibility
+        browser = await p.chromium.launch(headless=False)
         context = await browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             viewport={"width": 1280, "height": 800},
@@ -43,7 +49,7 @@ async def process_keywords(file):
     df = pd.read_excel(file)
     keywords = df['Keyword'].tolist()
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)  # Use headless=True for compatibility
+        browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(storage_state="auth_state.json")
         page = await context.new_page()
         results = []
@@ -95,3 +101,16 @@ if uploaded_file is not None:
                 )
             except Exception as e:
                 st.error(f"Error processing keywords: {e}")
+
+# Requirements for the Streamlit app
+requirements = """
+streamlit
+pandas
+asyncio
+playwright
+openpyxl
+"""
+
+# Save the requirements to a file
+with open("requirements.txt", "w") as file:
+    file.write(requirements)
