@@ -67,6 +67,7 @@ The SGE Keyword Checker Tool validates at scale if an AI Overview Snippet is gen
 2. **Upload Your Keyword List**: Upload an Excel file (.xlsx) containing the keywords you want to check.
 3. **Check for AI Overview**: Click the "Check Keywords" button to start the process. The tool will search for each keyword on Google and check if an AI Overview Snippet is present.
 4. **Download Results**: Once the process is complete, you can download the results as an Excel file.
+""")
 
 # Button to start the authentication process
 if st.button("Sign into Google Account"):
