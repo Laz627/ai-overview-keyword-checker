@@ -3,15 +3,20 @@ import pandas as pd
 from playwright.sync_api import sync_playwright
 from io import BytesIO
 import subprocess
+import os
 
-# Function to install Playwright browsers
-def install_playwright_browsers():
+# Function to install Playwright and the necessary browsers if they are not already installed
+def install_playwright():
     try:
-        subprocess.run(["playwright", "install", "chromium"], check=True)
-        st.write("Playwright browsers installed successfully.")
-    except subprocess.CalledProcessError as e:
-        st.error(f"Error during Playwright browser installation: {e}")
-        st.stop()
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        st.write("Installing Playwright...")
+        subprocess.run(["pip", "install", "playwright"])
+        subprocess.run(["playwright", "install", "chromium"])
+        from playwright.sync_api import sync_playwright
+
+# Install Playwright if not installed
+install_playwright()
 
 # Function to save authentication state
 def save_auth_state():
@@ -77,9 +82,6 @@ The SGE Keyword Checker Tool validates at scale if an AI Overview Snippet is gen
 3. **Check for AI Overview**: Click the "Check Keywords" button to start the process. The tool will search for each keyword on Google and check if an AI Overview Snippet is present.
 4. **Download Results**: Once the process is complete, you can download the results as an Excel file.
 """)
-
-# Install Playwright browsers
-install_playwright_browsers()
 
 # Button to start the authentication process
 if st.button("Sign into Google Account"):
