@@ -1,4 +1,3 @@
 #!/bin/bash
-
-# Install Playwright browsers
-playwright install
+# Install Playwright and its dependencies
+playwright install chromium
