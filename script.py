@@ -3,7 +3,6 @@ import pandas as pd
 from playwright.sync_api import sync_playwright
 from io import BytesIO
 import subprocess
-import os
 
 # Function to install Playwright and the necessary browsers if they are not already installed
 def install_playwright():
