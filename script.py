@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
-from streamlit_playwright import streamlit_playwright
+from playwright.sync_api import sync_playwright
 from io import BytesIO
 
 # Function to save authentication state
 def save_auth_state():
-    with streamlit_playwright() as p:
+    with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
         context = browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -40,7 +40,7 @@ def search_ai_overview(page, keyword):
 def process_keywords(file):
     df = pd.read_excel(file)
     keywords = df['Keyword'].tolist()
-    with streamlit_playwright() as p:
+    with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(storage_state="auth_state.json")
         page = context.new_page()
