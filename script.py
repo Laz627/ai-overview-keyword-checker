@@ -59,10 +59,11 @@ async def process_keywords(file):
 st.title("SGE Keyword Checker Tool")
 
 st.write("""
-## Description
-The SGE Keyword Checker Tool validates at scale if an AI Overview Snippet is generated for your list of keywords. 
+
+Purpose: The SGE Keyword Checker Tool validates at scale if an AI Overview Snippet is generated for your list of keywords. 
 
 ### How to Use the Tool:
+
 1. **Sign in to your Google Account**: Click the "Sign in to Google" button and follow the instructions to log in (being signed into a Google Account is required by Google to display AI Overview results for your queries).
 2. **Upload Your Keyword List**: Upload an Excel file (.xlsx) containing the keywords you want to check.
 3. **Check for AI Overview**: Click the "Check Keywords" button to start the process. The tool will search for each keyword on Google and check if an AI Overview Snippet is present.
