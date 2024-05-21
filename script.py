@@ -1,4 +1,3 @@
-import os
 import streamlit as st
 import pandas as pd
 import asyncio
@@ -8,9 +7,11 @@ import subprocess
 
 # Install Playwright browsers
 try:
-    subprocess.run(["playwright", "install"], check=True)
-except Exception as e:
+    subprocess.run(["playwright", "install", "chromium"], check=True)
+    st.write("Playwright installation successful.")
+except subprocess.CalledProcessError as e:
     st.error(f"Error during Playwright installation: {e}")
+    st.stop()
 
 # Function to save authentication state
 async def save_auth_state():
