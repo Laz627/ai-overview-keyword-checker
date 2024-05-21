@@ -1,35 +1,33 @@
 import streamlit as st
 import pandas as pd
-import asyncio
-from playwright.async_api import async_playwright
+from streamlit_playwright import streamlit_playwright
 from io import BytesIO
-import subprocess
 
 # Function to save authentication state
-async def save_auth_state():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
-        context = await browser.new_context(
+def save_auth_state():
+    with streamlit_playwright() as p:
+        browser = p.chromium.launch(headless=False)
+        context = browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             viewport={"width": 1280, "height": 800},
             device_scale_factor=1,
             is_mobile=False,
             has_touch=False
         )
-        page = await context.new_page()
-        await page.goto("https://accounts.google.com/signin")
+        page = context.new_page()
+        page.goto("https://accounts.google.com/signin")
         st.write("Please log in manually to your Google account...")
-        await page.wait_for_selector('a[aria-label*="Google Account:"]', timeout=60000)
-        await context.storage_state(path="auth_state.json")
-        await browser.close()
+        page.wait_for_selector('a[aria-label*="Google Account:"]', timeout=60000)
+        context.storage_state(path="auth_state.json")
+        browser.close()
 
 # Function to search for "AI Overview" in Google search results
-async def search_ai_overview(page, keyword):
+def search_ai_overview(page, keyword):
     url = f"https://www.google.com/search?q={keyword}"
-    await page.goto(url)
-    await page.wait_for_load_state('networkidle')
-    await page.wait_for_timeout(3000)
-    ai_overview_found = await page.evaluate("""
+    page.goto(url)
+    page.wait_for_load_state('networkidle')
+    page.wait_for_timeout(3000)
+    ai_overview_found = page.evaluate("""
         () => {
             const searchText = 'AI Overview';
             const bodyText = document.body.innerText;
@@ -39,16 +37,16 @@ async def search_ai_overview(page, keyword):
     return ai_overview_found
 
 # Main function to process the keywords
-async def process_keywords(file):
+def process_keywords(file):
     df = pd.read_excel(file)
     keywords = df['Keyword'].tolist()
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context(storage_state="auth_state.json")
-        page = await context.new_page()
+    with streamlit_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(storage_state="auth_state.json")
+        page = context.new_page()
         results = []
         for keyword in keywords:
-            has_ai_overview = await search_ai_overview(page, keyword)
+            has_ai_overview = search_ai_overview(page, keyword)
             results.append({'Keyword': keyword, 'AI Overview Found': 'Yes' if has_ai_overview else 'No'})
         result_df = pd.DataFrame(results)
         output = BytesIO()
@@ -74,7 +72,7 @@ The SGE Keyword Checker Tool validates at scale if an AI Overview Snippet is gen
 if st.button("Sign into Google Account"):
     st.write("Please follow the instructions in the browser window that opens.")
     try:
-        asyncio.run(save_auth_state())
+        save_auth_state()
         st.write("Authentication state saved. You can now upload your keyword list.")
     except Exception as e:
         st.error(f"Error during authentication: {e}")
@@ -85,7 +83,7 @@ if uploaded_file is not None:
     if st.button("Process Keywords"):
         with st.spinner("Processing keywords..."):
             try:
-                result_df = asyncio.run(process_keywords(uploaded_file))
+                result_df = process_keywords(uploaded_file)
                 st.write("Processing complete. Download the results below.")
                 st.download_button(
                     label="Download Keyword Search Results",
@@ -95,7 +93,3 @@ if uploaded_file is not None:
                 )
             except Exception as e:
                 st.error(f"Error processing keywords: {e}")
-
-# Save the requirements to a file
-with open("requirements.txt", "w") as file:
-    file.write(requirements)
