@@ -4,14 +4,19 @@ import asyncio
 from playwright.async_api import async_playwright
 from io import BytesIO
 import subprocess
+import os
 
-# Install Playwright browsers
-try:
-    subprocess.run(["playwright", "install", "chromium"], check=True)
-    st.write("Playwright installation successful.")
-except subprocess.CalledProcessError as e:
-    st.error(f"Error during Playwright installation: {e}")
-    st.stop()
+# Run setup.sh to install Playwright dependencies
+def install_playwright():
+    try:
+        result = subprocess.run(["bash", "setup.sh"], check=True, capture_output=True, text=True)
+        st.write("Playwright installation successful.")
+    except subprocess.CalledProcessError as e:
+        st.error(f"Error during Playwright installation: {e.stderr}")
+        st.stop()
+
+# Install Playwright if not already installed
+install_playwright()
 
 # Function to save authentication state
 async def save_auth_state():
@@ -30,7 +35,6 @@ async def save_auth_state():
         await page.wait_for_selector('a[aria-label*="Google Account:"]', timeout=60000)
         await context.storage_state(path="auth_state.json")
         await browser.close()
-        st.write("Authentication state saved.")
 
 # Function to search for "AI Overview" in Google search results
 async def search_ai_overview(page, keyword):
@@ -115,5 +119,4 @@ openpyxl
 """
 
 # Save the requirements to a file
-with open("requirements.txt", "w") as file:
-    file.write(requirements)
+with ope
