@@ -4,9 +4,8 @@ import asyncio
 from playwright.async_api import async_playwright
 from io import BytesIO
 import subprocess
-import os
 
-# Run setup.sh to install Playwright dependencies
+# Function to run setup.sh to install Playwright dependencies
 def install_playwright():
     try:
         result = subprocess.run(["bash", "setup.sh"], check=True, capture_output=True, text=True)
@@ -119,4 +118,5 @@ openpyxl
 """
 
 # Save the requirements to a file
-with ope
+with open("requirements.txt", "w") as file:
+    file.write(requirements)
