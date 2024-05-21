@@ -6,9 +6,9 @@ import asyncio
 from playwright.async_api import async_playwright
 from io import BytesIO
 
-# Ensure Playwright browsers are installed
+# Run the setup script to install Playwright browsers
 if not os.path.exists("/home/appuser/.cache/ms-playwright"):
-    subprocess.run(["playwright", "install"], check=True)
+    subprocess.run(["./setup.sh"], check=True)
 
 # Function to save authentication state
 async def save_auth_state():
