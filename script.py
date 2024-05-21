@@ -7,7 +7,7 @@ from io import BytesIO
 # Function to save authentication state
 async def save_auth_state():
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        browser = await p.chromium.launch(headless=True)  # Use headless=True for compatibility
         context = await browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             viewport={"width": 1280, "height": 800},
@@ -43,7 +43,7 @@ async def process_keywords(file):
     df = pd.read_excel(file)
     keywords = df['Keyword'].tolist()
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        browser = await p.chromium.launch(headless=True)  # Use headless=True for compatibility
         context = await browser.new_context(storage_state="auth_state.json")
         page = await context.new_page()
         results = []
@@ -73,19 +73,25 @@ The SGE Keyword Checker Tool validates at scale if an AI Overview Snippet is gen
 # Button to start the authentication process
 if st.button("Sign into Google Account"):
     st.write("Please follow the instructions in the browser window that opens.")
-    asyncio.run(save_auth_state())
-    st.write("Authentication state saved. You can now upload your keyword list.")
+    try:
+        asyncio.run(save_auth_state())
+        st.write("Authentication state saved. You can now upload your keyword list.")
+    except Exception as e:
+        st.error(f"Error during authentication: {e}")
 
 # File uploader for the keyword list
 uploaded_file = st.file_uploader("Upload Keyword List", type=["xlsx"])
 if uploaded_file is not None:
     if st.button("Process Keywords"):
         with st.spinner("Processing keywords..."):
-            result_df = asyncio.run(process_keywords(uploaded_file))
-            st.write("Processing complete. Download the results below.")
-            st.download_button(
-                label="Download Keyword Search Results",
-                data=result_df,
-                file_name="ai_overview_results.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+            try:
+                result_df = asyncio.run(process_keywords(uploaded_file))
+                st.write("Processing complete. Download the results below.")
+                st.download_button(
+                    label="Download Keyword Search Results",
+                    data=result_df,
+                    file_name="ai_overview_results.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+            except Exception as e:
+                st.error(f"Error processing keywords: {e}")
