@@ -40,6 +40,8 @@ def install_playwright_and_deps():
             return True
         except subprocess.CalledProcessError as e:
             st.error(f"Failed to install Playwright or its dependencies: {e.stderr}")
+            st.write(f"Standard output: {e.stdout}")
+            st.write(f"Standard error: {e.stderr}")
             return False
 
 # Function to save authentication state
