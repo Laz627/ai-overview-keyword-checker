@@ -2,3 +2,4 @@ streamlit
 pandas
 pyppeteer
 openpyxl
+beautifulsoup
