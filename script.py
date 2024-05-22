@@ -14,7 +14,42 @@ def run_subprocess(command):
     st.write(f"Standard error: {result.stderr}")
     return result.returncode, result.stdout, result.stderr
 
-# Function to install Playwright and the necessary dependencies
+# Function to install system dependencies directly using apt-get
+def install_system_deps():
+    st.write("Installing system dependencies directly using apt-get...")
+
+    deps = [
+        "libnss3",
+        "libnspr4",
+        "libatk1.0-0",
+        "libatk-bridge2.0-0",
+        "libcups2",
+        "libdrm2",
+        "libatspi2.0-0",
+        "libxcomposite1",
+        "libxdamage1",
+        "libxfixes3",
+        "libxrandr2",
+        "libgbm1",
+        "libxkbcommon0",
+        "libpango-1.0-0",
+        "libcairo2",
+        "libasound2"
+    ]
+
+    return_code, stdout, stderr = run_subprocess(["apt-get", "update"])
+    if return_code != 0:
+        st.error("Failed to update package list")
+        return False
+
+    return_code, stdout, stderr = run_subprocess(["apt-get", "install", "-y"] + deps)
+    if return_code != 0:
+        st.error("Failed to install system dependencies")
+        return False
+
+    return True
+
+# Function to install Playwright and its dependencies
 def install_playwright_and_deps():
     st.write("Installing Playwright and necessary dependencies...")
 
@@ -25,9 +60,8 @@ def install_playwright_and_deps():
         return False
 
     # Install system dependencies for Playwright
-    return_code, stdout, stderr = run_subprocess(["playwright", "install-deps"])
-    if return_code != 0:
-        st.error("Failed to install Playwright system dependencies")
+    if not install_system_deps():
+        st.error("Failed to install system dependencies")
         return False
 
     # Install Chromium for Playwright
