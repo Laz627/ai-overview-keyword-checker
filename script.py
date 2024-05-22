@@ -17,9 +17,6 @@ def install_playwright():
         subprocess.run(["pip", "install", "playwright"], check=True)
         subprocess.run(["playwright", "install", "chromium"], check=True)
 
-# Install Playwright if not installed
-install_playwright()
-
 # Function to save authentication state
 def save_auth_state():
     with sync_playwright() as p:
@@ -70,6 +67,10 @@ def process_keywords(file):
         result_df.to_excel(output, index=False)
         output.seek(0)
         return output
+
+# Ensure Playwright and browsers are installed
+st.write("Checking Playwright installation...")
+install_playwright()
 
 # Streamlit app interface
 st.title("SGE Keyword Checker Tool")
