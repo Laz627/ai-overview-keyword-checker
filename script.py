@@ -1,22 +1,28 @@
 import streamlit as st
 import pandas as pd
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, Playwright, Error as PlaywrightError
 from io import BytesIO
 import subprocess
 import os
+import sys
 
 # Function to install Playwright and the necessary browsers if they are not already installed
 def install_playwright():
     try:
-        from playwright.sync_api import sync_playwright
+        import playwright
         # Check if the browsers are already installed
-        browser_path = os.path.expanduser('~/.cache/ms-playwright/chromium-1117/chrome-linux/chrome')
-        if not os.path.exists(browser_path):
+        if not os.path.exists(os.path.expanduser('~/.cache/ms-playwright')):
             raise ImportError("Playwright browsers are not installed")
     except ImportError:
         st.write("Installing Playwright and necessary browsers...")
-        subprocess.run(["pip", "install", "playwright"], check=True)
-        subprocess.run(["playwright", "install", "chromium"], check=True)
+        result = subprocess.run([sys.executable, "-m", "pip", "install", "playwright"], check=False, capture_output=True, text=True)
+        st.write(result.stdout)
+        st.write(result.stderr)
+        result = subprocess.run(["playwright", "install", "chromium"], check=False, capture_output=True, text=True)
+        st.write(result.stdout)
+        st.write(result.stderr)
+        # Re-import after installation
+        import playwright
 
 # Function to save authentication state
 def save_auth_state():
@@ -93,7 +99,7 @@ if st.button("Sign into Google Account"):
     try:
         save_auth_state()
         st.write("Authentication state saved. You can now upload your keyword list.")
-    except Exception as e:
+    except PlaywrightError as e:
         st.error(f"Error during authentication: {e}")
 
 # File uploader for the keyword list
@@ -110,5 +116,5 @@ if uploaded_file is not None:
                     file_name="ai_overview_results.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
-            except Exception as e:
+            except PlaywrightError as e:
                 st.error(f"Error processing keywords: {e}")
