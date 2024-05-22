@@ -1,26 +1,34 @@
 import streamlit as st
 import pandas as pd
+import requests
+from bs4 import BeautifulSoup
 from io import BytesIO
-from requests_html import HTMLSession
 
 def authenticate_google(email, password):
     try:
-        session = HTMLSession()
+        session = requests.Session()
         login_url = "https://accounts.google.com/signin"
         
-        # Make a GET request to the login page
+        # Get the initial login page
         response = session.get(login_url)
+        soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Fill in the email and submit the form
-        form = response.html.find("form", first=True)
-        form.find("input[type='email']", first=True).value = email
-        response = session.post(form.attrs["action"], data=form.form_values())
-        
-        # Fill in the password and submit the form
-        form = response.html.find("form", first=True)
-        form.find("input[type='password']", first=True).value = password
-        response = session.post(form.attrs["action"], data=form.form_values())
-        
+        # Extract form data
+        form = soup.find('form')
+        action_url = form['action']
+        payload = {tag['name']: tag['value'] for tag in form.find_all('input') if tag.get('name')}
+        payload['Email'] = email
+
+        # Post email
+        response = session.post(action_url, data=payload)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        form = soup.find('form')
+        action_url = form['action']
+        payload = {tag['name']: tag['value'] for tag in form.find_all('input') if tag.get('name')}
+        payload['Passwd'] = password
+
+        # Post password
+        response = session.post(action_url, data=payload)
         return session.cookies
     except Exception as e:
         st.error(f"Error during authentication: {e}")
@@ -32,9 +40,10 @@ def search_ai_overview(keyword, cookies):
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
-        session = HTMLSession()
-        response = session.get(url, headers=headers, cookies=cookies)
-        body_text = response.html.full_text
+        response = requests.get(url, headers=headers, cookies=cookies)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+        body_text = soup.get_text()
         return "AI Overview" in body_text
     except Exception as e:
         st.error(f"Error searching for keyword '{keyword}': {e}")
@@ -72,6 +81,7 @@ email = st.text_input("Google Account Email")
 password = st.text_input("Google Account Password", type="password")
 
 # Authenticate Google account
+cookies = None
 if st.button("Sign in"):
     cookies = authenticate_google(email, password)
     if cookies:
@@ -94,3 +104,5 @@ if uploaded_file is not None and cookies:
                     file_name="ai_overview_results.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
+else:
+    st.write("Please sign in and upload a keyword list.")
