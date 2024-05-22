@@ -17,29 +17,29 @@ def install_playwright_and_deps():
     except ImportError:
         try:
             st.write("Installing Playwright and necessary browsers...")
-            result = subprocess.run([sys.executable, "-m", "pip", "install", "playwright"], check=True, capture_output=True, text=True)
-            st.write(result.stdout)
+            result = subprocess.run([sys.executable, "-m", "pip", "install", "playwright"], check=False, capture_output=True, text=True)
+            st.write(f"Playwright install stdout: {result.stdout}")
             if result.returncode != 0:
-                st.error(result.stderr)
+                st.error(f"Playwright install stderr: {result.stderr}")
                 return False
 
             st.write("Installing system dependencies for Playwright...")
-            result = subprocess.run(["playwright", "install-deps"], check=True, capture_output=True, text=True)
-            st.write(result.stdout)
+            result = subprocess.run(["playwright", "install-deps"], check=False, capture_output=True, text=True)
+            st.write(f"install-deps stdout: {result.stdout}")
             if result.returncode != 0:
-                st.error(result.stderr)
+                st.error(f"install-deps stderr: {result.stderr}")
                 return False
 
             st.write("Installing Chromium...")
-            result = subprocess.run(["playwright", "install", "chromium"], check=True, capture_output=True, text=True)
-            st.write(result.stdout)
+            result = subprocess.run(["playwright", "install", "chromium"], check=False, capture_output=True, text=True)
+            st.write(f"Chromium install stdout: {result.stdout}")
             if result.returncode != 0:
-                st.error(result.stderr)
+                st.error(f"Chromium install stderr: {result.stderr}")
                 return False
 
             return True
         except subprocess.CalledProcessError as e:
-            st.error(f"Failed to install Playwright or its dependencies: {e.stderr}")
+            st.error(f"Failed to install Playwright or its dependencies: {str(e)}")
             st.write(f"Standard output: {e.stdout}")
             st.write(f"Standard error: {e.stderr}")
             return False
