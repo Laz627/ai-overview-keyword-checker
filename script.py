@@ -3,16 +3,19 @@ import pandas as pd
 from playwright.sync_api import sync_playwright
 from io import BytesIO
 import subprocess
+import os
 
 # Function to install Playwright and the necessary browsers if they are not already installed
 def install_playwright():
     try:
         from playwright.sync_api import sync_playwright
+        # Check if the browsers are already installed
+        if not os.path.exists(os.path.expanduser('~/.cache/ms-playwright')):
+            raise ImportError("Playwright browsers are not installed")
     except ImportError:
-        st.write("Installing Playwright...")
-        subprocess.run(["pip", "install", "playwright"])
-        subprocess.run(["playwright", "install", "chromium"])
-        from playwright.sync_api import sync_playwright
+        st.write("Installing Playwright and necessary browsers...")
+        subprocess.run(["pip", "install", "playwright"], check=True)
+        subprocess.run(["playwright", "install", "chromium"], check=True)
 
 # Install Playwright if not installed
 install_playwright()
