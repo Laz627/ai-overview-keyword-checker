@@ -36,21 +36,24 @@ def install_playwright_and_deps():
 
 # Function to save authentication state
 def save_auth_state():
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        context = browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            viewport={"width": 1280, "height": 800},
-            device_scale_factor=1,
-            is_mobile=False,
-            has_touch=False
-        )
-        page = context.new_page()
-        page.goto("https://accounts.google.com/signin")
-        st.write("Please log in manually to your Google account...")
-        page.wait_for_selector('a[aria-label*="Google Account:"]', timeout=60000)
-        context.storage_state(path="auth_state.json")
-        browser.close()
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=False)
+            context = browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                viewport={"width": 1280, "height": 800},
+                device_scale_factor=1,
+                is_mobile=False,
+                has_touch=False
+            )
+            page = context.new_page()
+            page.goto("https://accounts.google.com/signin")
+            st.write("Please log in manually to your Google account...")
+            page.wait_for_selector('a[aria-label*="Google Account:"]', timeout=60000)
+            context.storage_state(path="auth_state.json")
+            browser.close()
+    except PlaywrightError as e:
+        st.error(f"Playwright error: {e}")
 
 # Function to search for "AI Overview" in Google search results
 def search_ai_overview(page, keyword):
@@ -71,19 +74,22 @@ def search_ai_overview(page, keyword):
 def process_keywords(file):
     df = pd.read_excel(file)
     keywords = df['Keyword'].tolist()
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        context = browser.new_context(storage_state="auth_state.json")
-        page = context.new_page()
-        results = []
-        for keyword in keywords:
-            has_ai_overview = search_ai_overview(page, keyword)
-            results.append({'Keyword': keyword, 'AI Overview Found': 'Yes' if has_ai_overview else 'No'})
-        result_df = pd.DataFrame(results)
-        output = BytesIO()
-        result_df.to_excel(output, index=False)
-        output.seek(0)
-        return output
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(storage_state="auth_state.json")
+            page = context.new_page()
+            results = []
+            for keyword in keywords:
+                has_ai_overview = search_ai_overview(page, keyword)
+                results.append({'Keyword': keyword, 'AI Overview Found': 'Yes' if has_ai_overview else 'No'})
+            result_df = pd.DataFrame(results)
+            output = BytesIO()
+            result_df.to_excel(output, index=False)
+            output.seek(0)
+            return output
+    except PlaywrightError as e:
+        st.error(f"Playwright error: {e}")
 
 # Ensure Playwright and browsers are installed
 st.write("Checking Playwright installation...")
