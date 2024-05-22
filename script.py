@@ -6,8 +6,8 @@ import subprocess
 import os
 import sys
 
-# Function to install Playwright and the necessary browsers if they are not already installed
-def install_playwright():
+# Function to install Playwright and the necessary dependencies
+def install_playwright_and_deps():
     try:
         from playwright.sync_api import sync_playwright
         # Check if the browsers are already installed
@@ -16,39 +16,15 @@ def install_playwright():
             raise ImportError("Playwright browsers are not installed")
     except ImportError:
         try:
-            st.write("Installing Playwright...")
+            st.write("Installing Playwright and necessary browsers...")
             subprocess.run([sys.executable, "-m", "pip", "install", "playwright"], check=True, capture_output=True, text=True)
-            st.write("Installing Chromium...")
+            st.write("Installing system dependencies for Playwright...")
+            result = subprocess.run(["playwright", "install-deps"], check=True, capture_output=True, text=True)
+            st.write(result.stdout)
+            st.write(result.stderr)
             subprocess.run(["playwright", "install", "chromium"], check=True, capture_output=True, text=True)
         except subprocess.CalledProcessError as e:
-            st.error(f"Failed to install Playwright or its browsers: {e.stderr}")
-
-# Function to install the required system dependencies
-def install_system_dependencies():
-    dependencies = [
-        "libnss3",
-        "libnspr4",
-        "libatk1.0-0",
-        "libatk-bridge2.0-0",
-        "libcups2",
-        "libdrm2",
-        "libatspi2.0-0",
-        "libxcomposite1",
-        "libxdamage1",
-        "libxfixes3",
-        "libxrandr2",
-        "libgbm1",
-        "libxkbcommon0",
-        "libpango-1.0-0",
-        "libcairo2",
-        "libasound2",
-    ]
-    try:
-        st.write("Installing system dependencies...")
-        subprocess.run(["apt-get", "update"], check=True)
-        subprocess.run(["apt-get", "install", "-y"] + dependencies, check=True)
-    except subprocess.CalledProcessError as e:
-        st.error(f"Failed to install system dependencies: {e.stderr}")
+            st.error(f"Failed to install Playwright or its dependencies: {e.stderr}")
 
 # Function to save authentication state
 def save_auth_state():
@@ -101,13 +77,9 @@ def process_keywords(file):
         output.seek(0)
         return output
 
-# Ensure system dependencies are installed
-st.write("Checking and installing system dependencies...")
-install_system_dependencies()
-
 # Ensure Playwright and browsers are installed
 st.write("Checking Playwright installation...")
-install_playwright()
+install_playwright_and_deps()
 
 # Streamlit app interface
 st.title("SGE Keyword Checker Tool")
