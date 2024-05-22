@@ -6,43 +6,38 @@ import subprocess
 import os
 import sys
 
+def run_subprocess(command):
+    result = subprocess.run(command, check=False, capture_output=True, text=True)
+    st.write(f"Running command: {' '.join(command)}")
+    st.write(f"Return code: {result.returncode}")
+    st.write(f"Standard output: {result.stdout}")
+    st.write(f"Standard error: {result.stderr}")
+    return result.returncode, result.stdout, result.stderr
+
 # Function to install Playwright and the necessary dependencies
 def install_playwright_and_deps():
-    try:
-        from playwright.sync_api import sync_playwright
-        # Check if the browsers are already installed
-        browser_path = os.path.expanduser('~/.cache/ms-playwright/chromium-1117/chrome-linux/chrome')
-        if not os.path.exists(browser_path):
-            raise ImportError("Playwright browsers are not installed")
-    except ImportError:
-        try:
-            st.write("Installing Playwright and necessary browsers...")
-            result = subprocess.run([sys.executable, "-m", "pip", "install", "playwright"], check=False, capture_output=True, text=True)
-            st.write(f"Playwright install stdout: {result.stdout}")
-            if result.returncode != 0:
-                st.error(f"Playwright install stderr: {result.stderr}")
-                return False
+    st.write("Installing Playwright and necessary dependencies...")
 
-            st.write("Installing system dependencies for Playwright...")
-            result = subprocess.run(["playwright", "install-deps"], check=False, capture_output=True, text=True)
-            st.write(f"install-deps stdout: {result.stdout}")
-            if result.returncode != 0:
-                st.error(f"install-deps stderr: {result.stderr}")
-                return False
+    # Install Playwright
+    return_code, stdout, stderr = run_subprocess([sys.executable, "-m", "pip", "install", "playwright"])
+    if return_code != 0:
+        st.error("Failed to install Playwright")
+        return False
 
-            st.write("Installing Chromium...")
-            result = subprocess.run(["playwright", "install", "chromium"], check=False, capture_output=True, text=True)
-            st.write(f"Chromium install stdout: {result.stdout}")
-            if result.returncode != 0:
-                st.error(f"Chromium install stderr: {result.stderr}")
-                return False
+    # Install system dependencies for Playwright
+    return_code, stdout, stderr = run_subprocess(["playwright", "install-deps"])
+    if return_code != 0:
+        st.error("Failed to install Playwright system dependencies")
+        return False
 
-            return True
-        except subprocess.CalledProcessError as e:
-            st.error(f"Failed to install Playwright or its dependencies: {str(e)}")
-            st.write(f"Standard output: {e.stdout}")
-            st.write(f"Standard error: {e.stderr}")
-            return False
+    # Install Chromium for Playwright
+    return_code, stdout, stderr = run_subprocess(["playwright", "install", "chromium"])
+    if return_code != 0:
+        st.error("Failed to install Chromium for Playwright")
+        return False
+
+    st.write("Playwright and necessary dependencies have been successfully installed.")
+    return True
 
 # Function to save authentication state
 def save_auth_state():
