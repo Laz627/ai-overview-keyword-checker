@@ -9,7 +9,7 @@ def authenticate_google(email, password):
         session = requests.Session()
 
         # Step 1: Get initial login page
-        initial_url = "https://accounts.google.com/v3/signin/identifier?ifkv=AaSxoQyfUH2gYf-9q17TdoVIvXA7-JFeRlmdh0pZnl8DQYaknquzqml27FBgnRyQqni_rlITIufn-g&flowName=GlifWebSignIn&flowEntry=ServiceLogin&dsh=S1762104740%3A1716339475380937&ddm=0"
+        initial_url = "https://accounts.google.com/signin"
         response = session.get(initial_url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -23,7 +23,7 @@ def authenticate_google(email, password):
         form_data['identifier'] = email
 
         # Step 2: Submit identifier form
-        identifier_url = "https://accounts.google.com/_/signin/sl/lookup"
+        identifier_url = "https://accounts.google.com/signin"
         response = session.post(identifier_url, data=form_data)
         response.raise_for_status()
 
@@ -37,7 +37,7 @@ def authenticate_google(email, password):
         form_data['Passwd'] = password
 
         # Step 3: Submit password form
-        password_url = "https://accounts.google.com/v3/signin/challenge/pwd"
+        password_url = "https://accounts.google.com/signin"
         response = session.post(password_url, data=form_data)
         response.raise_for_status()
 
