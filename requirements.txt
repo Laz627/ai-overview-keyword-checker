@@ -3,3 +3,4 @@ pandas
 pyppeteer
 openpyxl
 beautifulsoup4
+HTMLSession
