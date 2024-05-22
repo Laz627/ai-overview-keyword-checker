@@ -1,28 +1,25 @@
 import streamlit as st
 import pandas as pd
 from io import BytesIO
-import requests
-from bs4 import BeautifulSoup
+from requests_html import HTMLSession
 
 def authenticate_google(email, password):
     try:
-        session = requests.Session()
+        session = HTMLSession()
         login_url = "https://accounts.google.com/signin"
         
         # Make a GET request to the login page
         response = session.get(login_url)
-        soup = BeautifulSoup(response.text, "html.parser")
         
-        # Extract the necessary form data
-        form_data = {
-            "email": email,
-            "password": password,
-            "lt": soup.find("input", {"name": "lt"})["value"],
-            "continue": "https://www.google.com/"
-        }
+        # Fill in the email and submit the form
+        form = response.html.find("form", first=True)
+        form.find("input[type='email']", first=True).value = email
+        response = session.post(form.attrs["action"], data=form.form_values())
         
-        # Submit the login form
-        session.post(login_url, data=form_data)
+        # Fill in the password and submit the form
+        form = response.html.find("form", first=True)
+        form.find("input[type='password']", first=True).value = password
+        response = session.post(form.attrs["action"], data=form.form_values())
         
         return session.cookies
     except Exception as e:
@@ -35,9 +32,9 @@ def search_ai_overview(keyword, cookies):
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
-        response = requests.get(url, headers=headers, cookies=cookies)
-        soup = BeautifulSoup(response.text, "html.parser")
-        body_text = soup.get_text()
+        session = HTMLSession()
+        response = session.get(url, headers=headers, cookies=cookies)
+        body_text = response.html.full_text
         return "AI Overview" in body_text
     except Exception as e:
         st.error(f"Error searching for keyword '{keyword}': {e}")
