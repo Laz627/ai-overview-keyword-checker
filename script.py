@@ -6,30 +6,47 @@ from io import BytesIO
 
 def authenticate_google(email, password):
     try:
-        form_data = {'Email': email, 'Passwd': password}
-        post_url = "https://accounts.google.com/signin/challenge/sl/password"
+        session = requests.Session()
 
-        with requests.Session() as s:
-            # Initial request to get login form
-            response = s.get("https://mail.google.com")
-            response.raise_for_status()
-            soup = BeautifulSoup(response.text, 'html.parser')
-            
-            # Populate form data with hidden inputs
-            for inp in soup.select("#gaia_loginform input[name]"):
-                if inp["name"] not in form_data:
-                    form_data[inp["name"]] = inp["value"]
-            
-            # Submit login form
-            response = s.post(post_url, data=form_data)
-            response.raise_for_status()
-            
-            # Verify login success
-            if "Sign in" in response.text:
-                raise Exception("Failed to log in. Check your credentials.")
-            
-            cookies = s.cookies.get_dict()
-            return cookies
+        # Step 1: Get initial login page
+        initial_url = "https://accounts.google.com/v3/signin/identifier?ifkv=AaSxoQyfUH2gYf-9q17TdoVIvXA7-JFeRlmdh0pZnl8DQYaknquzqml27FBgnRyQqni_rlITIufn-g&flowName=GlifWebSignIn&flowEntry=ServiceLogin&dsh=S1762104740%3A1716339475380937&ddm=0"
+        response = session.get(initial_url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # Extract form fields for identifier
+        form_data = {}
+        for input_tag in soup.find_all('input'):
+            if input_tag.get('name'):
+                form_data[input_tag['name']] = input_tag.get('value', '')
+
+        form_data['identifier'] = email
+
+        # Step 2: Submit identifier form
+        identifier_url = "https://accounts.google.com/_/signin/sl/lookup"
+        response = session.post(identifier_url, data=form_data)
+        response.raise_for_status()
+
+        # Extract form fields for password challenge
+        soup = BeautifulSoup(response.text, 'html.parser')
+        form_data = {}
+        for input_tag in soup.find_all('input'):
+            if input_tag.get('name'):
+                form_data[input_tag['name']] = input_tag.get('value', '')
+
+        form_data['Passwd'] = password
+
+        # Step 3: Submit password form
+        password_url = "https://accounts.google.com/v3/signin/challenge/pwd"
+        response = session.post(password_url, data=form_data)
+        response.raise_for_status()
+
+        # Verify login success
+        if "Sign in" in response.text:
+            raise Exception("Failed to log in. Check your credentials.")
+        
+        cookies = session.cookies.get_dict()
+        return cookies
     except Exception as e:
         st.error(f"Error during authentication: {e}")
         return None
