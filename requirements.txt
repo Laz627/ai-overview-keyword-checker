@@ -4,3 +4,4 @@ pyppeteer
 openpyxl
 beautifulsoup4
 HTMLSession
+requests-html
