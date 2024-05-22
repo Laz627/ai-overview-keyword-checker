@@ -2,4 +2,4 @@ streamlit
 pandas
 pyppeteer
 openpyxl
-beautifulsoup
+beautifulsoup4
