@@ -9,22 +9,19 @@ import sys
 # Function to install Playwright and the necessary browsers if they are not already installed
 def install_playwright():
     try:
-        # Importing sync_playwright to check if Playwright is installed
         from playwright.sync_api import sync_playwright
         # Check if the browsers are already installed
         browser_path = os.path.expanduser('~/.cache/ms-playwright/chromium-1117/chrome-linux/chrome')
         if not os.path.exists(browser_path):
             raise ImportError("Playwright browsers are not installed")
     except ImportError:
-        # Installing Playwright and necessary browsers
-        st.write("Installing Playwright and necessary browsers...")
-        subprocess.run([sys.executable, "-m", "pip", "install", "playwright"], check=True)
-        result = subprocess.run(["playwright", "install", "chromium"], check=True, capture_output=True, text=True)
-        if result.returncode != 0:
-            st.write(result.stdout)
-            st.write(result.stderr)
-        # Re-import after installation
-        from playwright.sync_api import sync_playwright
+        try:
+            st.write("Installing Playwright...")
+            subprocess.run([sys.executable, "-m", "pip", "install", "playwright"], check=True, capture_output=True, text=True)
+            st.write("Installing Chromium...")
+            subprocess.run(["playwright", "install", "chromium"], check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as e:
+            st.error(f"Failed to install Playwright or its browsers: {e.stderr}")
 
 # Function to save authentication state
 def save_auth_state():
@@ -78,11 +75,8 @@ def process_keywords(file):
         return output
 
 # Ensure Playwright and browsers are installed
-try:
-    st.write("Checking Playwright installation...")
-    install_playwright()
-except subprocess.CalledProcessError as e:
-    st.error(f"Failed to install Playwright or its browsers: {e}")
+st.write("Checking Playwright installation...")
+install_playwright()
 
 # Streamlit app interface
 st.title("SGE Keyword Checker Tool")
