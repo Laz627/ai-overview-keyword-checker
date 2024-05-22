@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from playwright.sync_api import sync_playwright, Playwright, Error as PlaywrightError
+from playwright.sync_api import sync_playwright, Error as PlaywrightError
 from io import BytesIO
 import subprocess
 import os
@@ -9,20 +9,22 @@ import sys
 # Function to install Playwright and the necessary browsers if they are not already installed
 def install_playwright():
     try:
-        import playwright
+        # Importing sync_playwright to check if Playwright is installed
+        from playwright.sync_api import sync_playwright
         # Check if the browsers are already installed
-        if not os.path.exists(os.path.expanduser('~/.cache/ms-playwright')):
+        browser_path = os.path.expanduser('~/.cache/ms-playwright/chromium-1117/chrome-linux/chrome')
+        if not os.path.exists(browser_path):
             raise ImportError("Playwright browsers are not installed")
     except ImportError:
+        # Installing Playwright and necessary browsers
         st.write("Installing Playwright and necessary browsers...")
-        result = subprocess.run([sys.executable, "-m", "pip", "install", "playwright"], check=False, capture_output=True, text=True)
-        st.write(result.stdout)
-        st.write(result.stderr)
-        result = subprocess.run(["playwright", "install", "chromium"], check=False, capture_output=True, text=True)
-        st.write(result.stdout)
-        st.write(result.stderr)
+        subprocess.run([sys.executable, "-m", "pip", "install", "playwright"], check=True)
+        result = subprocess.run(["playwright", "install", "chromium"], check=True, capture_output=True, text=True)
+        if result.returncode != 0:
+            st.write(result.stdout)
+            st.write(result.stderr)
         # Re-import after installation
-        import playwright
+        from playwright.sync_api import sync_playwright
 
 # Function to save authentication state
 def save_auth_state():
@@ -76,8 +78,11 @@ def process_keywords(file):
         return output
 
 # Ensure Playwright and browsers are installed
-st.write("Checking Playwright installation...")
-install_playwright()
+try:
+    st.write("Checking Playwright installation...")
+    install_playwright()
+except subprocess.CalledProcessError as e:
+    st.error(f"Failed to install Playwright or its browsers: {e}")
 
 # Streamlit app interface
 st.title("SGE Keyword Checker Tool")
