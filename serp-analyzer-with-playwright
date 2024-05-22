@@ -1,0 +1,118 @@
+import pandas as pd
+import time
+import random
+import asyncio
+from playwright.async_api import async_playwright
+
+async def log_page_content(page, keyword):
+    content = await page.content()
+    with open(f"debug_{keyword}.html", "w", encoding="utf-8") as f:
+        f.write(content)
+
+async def search_ai_overview(page, keyword):
+    url = f"https://www.google.com/search?q={keyword}"
+    await page.goto(url)
+    
+    try:
+        # Wait for the page to load completely
+        await page.wait_for_load_state('networkidle')
+        
+        # Give extra time for any dynamic content to load
+        await page.wait_for_timeout(3000)  # Wait for 3 more seconds
+        
+        # Log the main page content
+        await log_page_content(page, keyword)
+
+        # Check for the "AI Overview" text within the main document
+        ai_overview_found = await page.evaluate("""
+            () => {
+                const searchText = 'AI Overview';
+                const bodyText = document.body.innerText;
+                return bodyText.includes(searchText);
+            }
+        """)
+        
+        if ai_overview_found:
+            return True
+
+        # Check if the content is inside an iframe
+        frames = page.frames
+        for frame in frames:
+            frame_content = await frame.content()
+            with open(f"debug_{keyword}_iframe.html", "w", encoding="utf-8") as f:
+                f.write(frame_content)
+                
+            ai_overview_found_in_frame = await frame.evaluate("""
+                () => {
+                    const searchText = 'AI Overview';
+                    const bodyText = document.body.innerText;
+                    return bodyText.includes(searchText);
+                }
+            """)
+            if ai_overview_found_in_frame:
+                return True
+        
+        # Check if the content is within a shadow DOM
+        ai_overview_shadow = await page.evaluate("""
+            () => {
+                const searchText = 'AI Overview';
+                let found = false;
+                function searchShadowDom(element) {
+                    if (element.shadowRoot) {
+                        const shadowText = element.shadowRoot.innerText;
+                        if (shadowText.includes(searchText)) {
+                            found = true;
+                            return;
+                        }
+                        element.shadowRoot.querySelectorAll('*').forEach(searchShadowDom);
+                    }
+                }
+                document.querySelectorAll('*').forEach(searchShadowDom);
+                return found;
+            }
+        """)
+        
+        return ai_overview_shadow
+
+    except Exception as e:
+        print(f"Error occurred while searching for AI Overview for keyword: {keyword}. Exception: {e}")
+        return False
+
+async def main():
+    # Read keywords from the Excel spreadsheet
+    input_file = 'C:\\Users\\Laz\\OneDrive\\Desktop\\keywords.xlsx'
+    df = pd.read_excel(input_file)
+    keywords = df['Keyword'].tolist()
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=False)  # Use headless=False to see the browser actions
+        context = await browser.new_context(storage_state="auth_state.json")
+
+        # Open a new page
+        page = await context.new_page()
+
+        results = []
+        total_keywords = len(keywords)
+        for index, keyword in enumerate(keywords, start=1):
+            has_ai_overview = await search_ai_overview(page, keyword)
+            if has_ai_overview is None:
+                results.append({'Keyword': keyword, 'AI Overview Found': 'Error'})
+            else:
+                results.append({'Keyword': keyword, 'AI Overview Found': 'Yes' if has_ai_overview else 'No'})
+            time.sleep(random.uniform(1, 3))
+            remaining_keywords = total_keywords - index
+            print(f"Processed keyword: {keyword}")
+            print(f"Keywords left in queue: {remaining_keywords}")
+            print("---")
+
+        # Export the results to a new Excel spreadsheet
+        output_file = 'ai_overview_results.xlsx'
+        result_df = pd.DataFrame(results)
+        result_df.to_excel(output_file, index=False)
+
+        print(f"Results exported to {output_file}")
+
+        await browser.close()
+
+# Run the main function
+asyncio.run(main())
