@@ -2,20 +2,6 @@ import streamlit as st
 import pandas as pd
 from playwright.sync_api import sync_playwright
 from io import BytesIO
-import subprocess
-import os
-
-# Function to install Playwright and the necessary browsers if they are not already installed
-def install_playwright():
-    try:
-        from playwright.sync_api import sync_playwright
-        # Check if the browsers are already installed
-        if not os.path.exists(os.path.expanduser('~/.cache/ms-playwright')):
-            raise ImportError("Playwright browsers are not installed")
-    except ImportError:
-        st.write("Installing Playwright and necessary browsers...")
-        subprocess.run(["pip", "install", "playwright"], check=True)
-        subprocess.run(["playwright", "install", "chromium"], check=True)
 
 # Function to save authentication state
 def save_auth_state():
@@ -67,10 +53,6 @@ def process_keywords(file):
         result_df.to_excel(output, index=False)
         output.seek(0)
         return output
-
-# Ensure Playwright and browsers are installed
-st.write("Checking Playwright installation...")
-install_playwright()
 
 # Streamlit app interface
 st.title("SGE Keyword Checker Tool")
